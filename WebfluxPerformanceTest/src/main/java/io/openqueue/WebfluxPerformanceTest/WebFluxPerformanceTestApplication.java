@@ -37,4 +37,35 @@ public class WebFluxPerformanceTestApplication {
 					return Mono.just("Redis 请求耗时:" + (endTime - startTime) + "ms");
 				});
 	}
+
+	@GetMapping(value = "/multi_io_3")
+	public Mono<String> nio3() {
+		long startTime = System.currentTimeMillis();
+		return reactiveRedisTemplate.opsForValue().set(RandomCodeGenerator.get(), "iotest")
+				.then(reactiveRedisTemplate.opsForValue().set(RandomCodeGenerator.get(), "iotest"))
+				.then(reactiveRedisTemplate.opsForValue().set(RandomCodeGenerator.get(), "iotest"))
+				.flatMap(success -> {
+					long endTime = System.currentTimeMillis();
+					return Mono.just("Redis 请求耗时:" + (endTime - startTime) + "ms");
+				});
+	}
+
+	@GetMapping(value = "/multi_io_10")
+	public Mono<String> nio10() {
+		long startTime = System.currentTimeMillis();
+		return reactiveRedisTemplate.opsForValue().set(RandomCodeGenerator.get(), "iotest")
+				.then(reactiveRedisTemplate.opsForValue().set(RandomCodeGenerator.get(), "iotest"))
+				.then(reactiveRedisTemplate.opsForValue().set(RandomCodeGenerator.get(), "iotest"))
+				.then(reactiveRedisTemplate.opsForValue().set(RandomCodeGenerator.get(), "iotest"))
+				.then(reactiveRedisTemplate.opsForValue().set(RandomCodeGenerator.get(), "iotest"))
+				.then(reactiveRedisTemplate.opsForValue().set(RandomCodeGenerator.get(), "iotest"))
+				.then(reactiveRedisTemplate.opsForValue().set(RandomCodeGenerator.get(), "iotest"))
+				.then(reactiveRedisTemplate.opsForValue().set(RandomCodeGenerator.get(), "iotest"))
+				.then(reactiveRedisTemplate.opsForValue().set(RandomCodeGenerator.get(), "iotest"))
+				.then(reactiveRedisTemplate.opsForValue().set(RandomCodeGenerator.get(), "iotest"))
+				.flatMap(success -> {
+					long endTime = System.currentTimeMillis();
+					return Mono.just("Redis 请求耗时:" + (endTime - startTime) + "ms");
+				});
+	}
 }

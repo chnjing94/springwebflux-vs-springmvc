@@ -38,4 +38,24 @@ public class MvcPerformanceTestApplication {
 		long endTime = System.currentTimeMillis();
 		return "Redis 请求耗时:" + (endTime - startTime) + "ms";
 	}
+
+	@GetMapping(value = "/multi_io_3")
+	public String nio3() {
+		long startTime = System.currentTimeMillis();
+		redisTemplate.opsForValue().set(RandomCodeGenerator.get(), "iotest");
+		redisTemplate.opsForValue().set(RandomCodeGenerator.get(), "iotest");
+		redisTemplate.opsForValue().set(RandomCodeGenerator.get(), "iotest");
+		long endTime = System.currentTimeMillis();
+		return "Redis 请求耗时:" + (endTime - startTime) + "ms";
+	}
+
+	@GetMapping(value = "/multi_io_10")
+	public String nio10() {
+		long startTime = System.currentTimeMillis();
+		for (int i = 0; i < 10; i++) {
+			redisTemplate.opsForValue().set(RandomCodeGenerator.get(), "iotest");
+		}
+		long endTime = System.currentTimeMillis();
+		return "Redis 请求耗时:" + (endTime - startTime) + "ms";
+	}
 }
