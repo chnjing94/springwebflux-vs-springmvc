@@ -23,9 +23,14 @@ public class WebFluxPerformanceTestApplication {
 	@Autowired
 	private ReactiveRedisTemplate<String, Serializable> reactiveRedisTemplate;
 
-	@GetMapping("/sleep/{time}")
-	public Mono<String> sleep(@PathVariable int time) {
-		return Mono.delay(Duration.ofMillis(time)).thenReturn("Sleep " + time + "ms, Current Time:" + System.currentTimeMillis());
+	@GetMapping(value = "/hello")
+	public Mono<String> hello() {
+		return Mono.just("Hello!");
+	}
+
+	@GetMapping("/sleep/{duration}")
+	public Mono<String> sleep(@PathVariable int duration) {
+		return Mono.delay(Duration.ofMillis(duration)).thenReturn("Sleep " + duration + "ms, Current Time:" + System.currentTimeMillis());
 	}
 
 	@GetMapping(value = "/io")
@@ -38,31 +43,13 @@ public class WebFluxPerformanceTestApplication {
 				});
 	}
 
-	@GetMapping(value = "/multi_io_3")
-	public Mono<String> nio3() {
+	@GetMapping(value = "/io/{times}")
+	public Mono<String> multiIO(@PathVariable int times) {
+		assert times > 0;
 		long startTime = System.currentTimeMillis();
 		return reactiveRedisTemplate.opsForValue().set(RandomCodeGenerator.get(), "iotest")
-				.then(reactiveRedisTemplate.opsForValue().set(RandomCodeGenerator.get(), "iotest"))
-				.then(reactiveRedisTemplate.opsForValue().set(RandomCodeGenerator.get(), "iotest"))
-				.flatMap(success -> {
-					long endTime = System.currentTimeMillis();
-					return Mono.just("Redis 请求耗时:" + (endTime - startTime) + "ms");
-				});
-	}
-
-	@GetMapping(value = "/multi_io_10")
-	public Mono<String> nio10() {
-		long startTime = System.currentTimeMillis();
-		return reactiveRedisTemplate.opsForValue().set(RandomCodeGenerator.get(), "iotest")
-				.then(reactiveRedisTemplate.opsForValue().set(RandomCodeGenerator.get(), "iotest"))
-				.then(reactiveRedisTemplate.opsForValue().set(RandomCodeGenerator.get(), "iotest"))
-				.then(reactiveRedisTemplate.opsForValue().set(RandomCodeGenerator.get(), "iotest"))
-				.then(reactiveRedisTemplate.opsForValue().set(RandomCodeGenerator.get(), "iotest"))
-				.then(reactiveRedisTemplate.opsForValue().set(RandomCodeGenerator.get(), "iotest"))
-				.then(reactiveRedisTemplate.opsForValue().set(RandomCodeGenerator.get(), "iotest"))
-				.then(reactiveRedisTemplate.opsForValue().set(RandomCodeGenerator.get(), "iotest"))
-				.then(reactiveRedisTemplate.opsForValue().set(RandomCodeGenerator.get(), "iotest"))
-				.then(reactiveRedisTemplate.opsForValue().set(RandomCodeGenerator.get(), "iotest"))
+				.repeat(times - 1)
+				.last()
 				.flatMap(success -> {
 					long endTime = System.currentTimeMillis();
 					return Mono.just("Redis 请求耗时:" + (endTime - startTime) + "ms");

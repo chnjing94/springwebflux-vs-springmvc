@@ -21,6 +21,11 @@ public class MvcPerformanceTestApplication {
 	@Autowired
 	private RedisTemplate<String, Serializable> redisTemplate;
 
+	@GetMapping(value = "/hello")
+	public String hello() {
+		return "Hello!";
+	}
+
 	@GetMapping(value = "/sleep/{time}")
 	public String sleep(@PathVariable int time) {
 		try {
@@ -39,20 +44,11 @@ public class MvcPerformanceTestApplication {
 		return "Redis 请求耗时:" + (endTime - startTime) + "ms";
 	}
 
-	@GetMapping(value = "/multi_io_3")
-	public String nio3() {
+	@GetMapping(value = "/io/{times}")
+	public String multiIO(@PathVariable int times) {
+		assert times > 0;
 		long startTime = System.currentTimeMillis();
-		redisTemplate.opsForValue().set(RandomCodeGenerator.get(), "iotest");
-		redisTemplate.opsForValue().set(RandomCodeGenerator.get(), "iotest");
-		redisTemplate.opsForValue().set(RandomCodeGenerator.get(), "iotest");
-		long endTime = System.currentTimeMillis();
-		return "Redis 请求耗时:" + (endTime - startTime) + "ms";
-	}
-
-	@GetMapping(value = "/multi_io_10")
-	public String nio10() {
-		long startTime = System.currentTimeMillis();
-		for (int i = 0; i < 10; i++) {
+		for (int i = 0; i < times; i++) {
 			redisTemplate.opsForValue().set(RandomCodeGenerator.get(), "iotest");
 		}
 		long endTime = System.currentTimeMillis();
