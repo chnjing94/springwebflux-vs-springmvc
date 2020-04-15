@@ -35,24 +35,16 @@ public class WebFluxPerformanceTestApplication {
 
 	@GetMapping(value = "/io")
 	public Mono<String> redis() {
-		long startTime = System.currentTimeMillis();
 		return reactiveRedisTemplate.opsForValue().set(RandomCodeGenerator.get(), "iotest")
-				.flatMap(success -> {
-					long endTime = System.currentTimeMillis();
-					return Mono.just("Redis 请求耗时:" + (endTime - startTime) + "ms");
-				});
+				.thenReturn("Ok");
 	}
 
 	@GetMapping(value = "/io/{times}")
 	public Mono<String> multiIO(@PathVariable int times) {
-		assert times > 0;
 		long startTime = System.currentTimeMillis();
 		return reactiveRedisTemplate.opsForValue().set(RandomCodeGenerator.get(), "iotest")
 				.repeat(times - 1)
 				.last()
-				.flatMap(success -> {
-					long endTime = System.currentTimeMillis();
-					return Mono.just("Redis 请求耗时:" + (endTime - startTime) + "ms");
-				});
+				.flatMap(success -> Mono.just("Ok"));
 	}
 }
