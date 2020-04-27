@@ -49,7 +49,27 @@ public class MvcPerformanceTestApplication {
 	public String multiIO(@PathVariable int times) {
 		assert times > 0;
 		for (int i = 0; i < times; i++) {
-			redisTemplate.opsForValue().set(RandomCodeGenerator.get(), "iotest");
+			String value = RandomCodeGenerator.get();
+			String key = value + ":" +i;
+			redisTemplate.opsForValue().set(key, value);
+		}
+		return "Ok";
+	}
+
+	@GetMapping(value = "/delayio/{times}")
+	public String delayIO(@PathVariable int times, @RequestParam int delay) {
+		assert times > 0;
+		assert delay >= 0;
+
+		for (int i = 0; i < times; i++) {
+			String value = RandomCodeGenerator.get();
+			String key = value + ":" +i;
+			try {
+				Thread.sleep(delay);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			redisTemplate.opsForValue().set(key, value);
 		}
 		return "Ok";
 	}

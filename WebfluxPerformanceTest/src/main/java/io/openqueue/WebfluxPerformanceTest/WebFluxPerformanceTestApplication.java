@@ -1,6 +1,5 @@
 package io.openqueue.WebfluxPerformanceTest;
 
-import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -13,6 +12,8 @@ import reactor.core.publisher.Mono;
 
 import java.io.Serializable;
 import java.time.Duration;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 @SpringBootApplication
 @RestController
@@ -43,11 +44,32 @@ public class WebFluxPerformanceTestApplication {
     }
 
     @GetMapping(value = "/io/{times}")
-    public Mono<String> multiIO(@PathVariable int times) {
-    	assert times > 0;
-        return reactiveRedisTemplate.opsForValue().set(RandomCodeGenerator.get(), "iotest")
+    public Mono<String> multiIO(@PathVariable int times, @RequestParam Integer delay) {
+        String value = RandomCodeGenerator.get();
+        AtomicInteger index = new AtomicInteger(0);
+
+        Function<Boolean, Mono<Boolean>> redisOperation =
+                success -> reactiveRedisTemplate.opsForValue().set(value + ":" + index.incrementAndGet(), value);
+
+        return Mono.just(Boolean.TRUE)
+                .flatMap(redisOperation)
                 .repeat(times - 1)
-                .last()
-                .flatMap(success -> Mono.just("Ok"));
+                .then(Mono.just("OK"));
+    }
+
+    @GetMapping(value = "/delayio/{times}")
+    public Mono<String> delayIO(@PathVariable int times, @RequestParam int delay) {
+        assert times > 0;
+        assert delay >= 0;
+        String value = RandomCodeGenerator.get();
+        AtomicInteger index = new AtomicInteger(0);
+
+        Function<Boolean, Mono<Boolean>> redisOperation =
+                success -> Mono.delay(Duration.ofMillis(delay)).then(reactiveRedisTemplate.opsForValue().set(value + ":" + index.incrementAndGet(), value));
+
+        return Mono.just(Boolean.TRUE)
+                .flatMap(redisOperation)
+                .repeat(times - 1)
+                .then(Mono.just("OK"));
     }
 }
